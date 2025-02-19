@@ -1,0 +1,51 @@
+---
+title: "Practice Week 2"
+author: "Hugo van den Belt"
+date: "2024-12-16"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+# Importing Data Subset
+
+## Load Libraries
+```{r}
+library(haven)
+library(dplyr)
+```
+
+
+## File path
+```{r}
+file_path <- "/Users/hugovandenbelt/Downloads/GSS_stata/gss7222_r4.dta"
+gss_data <- read_dta(file_path)
+```
+
+The original Data Set can be downloaded from [the GSS website] (https://gss.norc.org/us/en/gss/get-the-data/stata.html) by downloading "Cumulative Data Set (cross-sectional samples from all years)"
+
+## Select relevant variables
+```{r}
+subset_data <- gss_data %>%
+  select(year, id, marital, cowrksta, sibs, childs, age, educ, degree, padeg, 
+         madeg, sex, race, reg16, income, rincome, region, partyid, polviews, 
+         polviewy, polviewx, relig, happy, class, satfin, finalter, finrela, 
+         econpast, pastdown, econfutr, futrup, futrdown, news30, pol30, 
+         polagree, polneutl, poldsagr, trtlib, trtcon, trtreps, trtdems, polnews)
+
+subset_data <- subset_data %>%
+  mutate(across(where(is.labelled), as.numeric))
+
+
+write.csv(subset_data, "/Users/hugovandenbelt/Documents/GitHub/Research Note EUR Recent Advancements/GSS_subset.csv", row.names = FALSE)
+
+head(subset_data)
+```
+
+## Check how many NAs exist in each column
+```{r}
+colSums(is.na(subset_data))
+```
+
+
