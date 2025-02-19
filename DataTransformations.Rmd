@@ -1,7 +1,7 @@
 ---
-title: "Practice Week 2"
+title: "Importing Data Subset"
 author: "Hugo van den Belt"
-date: "2024-12-16"
+date: "2025-02-19"
 output:
   pdf_document: default
   html_document: default
@@ -28,15 +28,22 @@ The original Data Set can be downloaded from [the GSS website] (https://gss.norc
 ## Select relevant variables
 ```{r}
 subset_data <- gss_data %>%
-  select(year, id, marital, cowrksta, sibs, childs, age, educ, degree, padeg, 
+  select(year, id, marital, sibs, childs, age, educ, degree, padeg, 
          madeg, sex, race, reg16, income, rincome, region, partyid, polviews, 
-         polviewy, polviewx, relig, happy, class, satfin, finalter, finrela, 
-         econpast, pastdown, econfutr, futrup, futrdown, news30, pol30, 
-         polagree, polneutl, poldsagr, trtlib, trtcon, trtreps, trtdems, polnews)
+         relig, happy, class, satfin, finalter, finrela)
 
 subset_data <- subset_data %>%
   mutate(across(where(is.labelled), as.numeric))
 
+# Convert necessary variables to factors
+# It would be easier to subset directly as factors, but that messes up the NA observations, hence this workaround
+factor_vars <- c("year", "marital", "educ", "degree", 
+                 "padeg", "madeg", "sex", "race", "reg16", "income", "rincome", "region", 
+                 "partyid", "polviews", "relig", "happy", "class", 
+                 "satfin", "finalter", "finrela")
+
+subset_data <- subset_data %>%
+  mutate(across(all_of(factor_vars), as.factor))
 
 write.csv(subset_data, "/Users/hugovandenbelt/Documents/GitHub/Research Note EUR Recent Advancements/GSS_subset.csv", row.names = FALSE)
 
