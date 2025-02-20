@@ -46,7 +46,7 @@ To create a variable where **any degree of party identification** is grouped und
 
 
 ```{r}
-subset_data <- subset_data %>%
+subset_data_imputed <- subset_data_imputed %>%
   mutate(
     Democrat_any = ifelse(partyid %in% c(0, 1, 2), 1, 0),
     Republican_any = ifelse(partyid %in% c(4, 5, 6), 1, 0)
@@ -59,7 +59,7 @@ subset_data <- subset_data %>%
 To create a variable where **STRONG degree of party identification**:
 
 ```{r}
-subset_data <- subset_data %>%
+subset_data_imputed <- subset_data_imputed %>%
   mutate(
     Democrat_strong = ifelse(partyid == 0, 1, 0),
     Republican_strong = ifelse(partyid == 6, 1, 0)
@@ -68,13 +68,13 @@ subset_data <- subset_data %>%
 
 
 ```{r}
-table(subset_data$partyid)
+table(subset_data_imputed$partyid)
 
-table(subset_data$Democrat_any)
-table(subset_data$Republican_any)
+table(subset_data_imputed$Democrat_any)
+table(subset_data_imputed$Republican_any)
 
-table(subset_data$Democrat_strong)
-table(subset_data$Republican_strong)
+table(subset_data_imputed$Democrat_strong)
+table(subset_data_imputed$Republican_strong)
 ```
 
 
@@ -86,7 +86,7 @@ table(subset_data$Republican_strong)
 These are the years in the dataset
 
 ```{r}
-unique(subset_data$year)
+unique(subset_data_imputed$year)
 ```
 
 From the [White House Website], (https://www.whitehousehistory.org/the-presidents-timeline) we can see who was president in what year, leading to this table:
@@ -134,7 +134,7 @@ Now we can create a variable that is 1 when the president is Republican, and 0 i
 
 ```{r}
 # president's party dummy
-subset_data <- subset_data %>%
+subset_data_imputed <- subset_data_imputed %>%
   mutate(
     pres_republican = case_when(
       year %in% c(1972, 1973, 1974, 1975, 1976, 1982, 1983, 1984, 1985, 1986, 
@@ -144,10 +144,60 @@ subset_data <- subset_data %>%
   )
 
 # Counts
-table(subset_data$pres_republican)
+table(subset_data_imputed$pres_republican)
+```
+
+```{r}
+# Create a dummy for when the president is a Democrat (1 = Democrat, 0 = Republican)
+subset_data_imputed <- subset_data_imputed %>%
+  mutate(
+    pres_democrat = case_when(
+      year %in% c(1977, 1978, 1980, 1993, 1994, 1996, 1998, 2000, 
+                  2010, 2012, 2014, 2016, 2021, 2022) ~ 1,
+      TRUE ~ 0
+    )
+  )
+
+# Check counts
+table(subset_data_imputed$pres_democrat)
 ```
 
 
+## Preparing (possible) outcome variables for ordered logistic regression
+```{r}
+library(dplyr)
+library(MASS)
 
+subset_data_imputed <- subset_data_imputed %>%
+  mutate(finalter = factor(finalter, 
+                           levels = c(2, 3, 1),  # Match numbers
+                           labels = c("worse", "stayed same", "better"), 
+                           ordered = TRUE),
+         satfin = factor(satfin, 
+                         levels = c(3, 2, 1),  
+                         labels = c("not satisfied at all", "more or less satisfied", "pretty well satisfied"), 
+                         ordered = TRUE))
+
+# Check structure
+levels(subset_data_imputed$finalter)
+levels(subset_data_imputed$satfin)
+
+str(subset_data_imputed$finalter)
+str(subset_data_imputed$satfin)
+
+```
+
+
+## Increased Polarization Marker
+
+```{r}
+# Ensure 'year' is numeric
+subset_data_imputed <- subset_data_imputed %>%
+  mutate(year = as.numeric(as.character(year))) %>%  # Convert year from factor to numeric
+  mutate(after_bushjr = if_else(year >= 2001, 1, 0))
+
+# Check counts
+table(subset_data_imputed$after_bushjr)
+```
 
 

@@ -23,12 +23,13 @@ file_path <- "/Users/hugovandenbelt/Downloads/GSS_stata/gss7222_r4.dta"
 gss_data <- read_dta(file_path)
 ```
 
+
 The original Data Set can be downloaded from [the GSS website] (https://gss.norc.org/us/en/gss/get-the-data/stata.html) by downloading "Cumulative Data Set (cross-sectional samples from all years)"
 
 ## Select relevant variables
 ```{r}
 subset_data <- gss_data %>%
-  select(year, id, marital, sibs, childs, age, educ, degree, padeg, 
+  dplyr::select(year, id, marital, sibs, childs, age, educ, degree, padeg, 
          madeg, sex, race, reg16, income, rincome, region, partyid, polviews, 
          relig, happy, class, satfin, finalter, finrela)
 
@@ -54,5 +55,52 @@ head(subset_data)
 ```{r}
 colSums(is.na(subset_data))
 ```
+
+# Handling Missing Data: Maximum Likelihood
+
+## Why Use Maximum Likelihood (ML) for Imputation?
+
+Missing data is a problem when doing multinomial logistic regression. Instead of simply dropping observations with missing values, I use **Maximum Likelihood (ML) imputation** using **Multiple Imputation by Chained Equations (MICE)** for more reliable results.
+
+I found most of the explanation on [this site] (https://www.blog.trainindata.com/multiple-imputation-with-chained-equations-mice-what-is-it/?)
+
+### **Advantages of ML Imputation:**
+1. **Preserves Data Relationships**  
+   - Unlike mean or mode imputation ML imputation considers the relationships between variables when filling in missing values. This avoids distorting the structure of the data.
+
+2. **Handles Both Categorical and Continuous Data**  
+   - MICE allows different imputation methods for different variable types. This makes it more flexible and appropriate for survey datasets.
+
+3. **Reduces Bias Compared to Listwise Deletion**  
+   - removing missing cases could introduce bias. ML imputation minimizes this risk by estimating missing values based on observed data.
+
+By using ML imputation, I ensure that my dataset remains as complete and unbiased as possible while preserving the integrity of the relationships between key variables.
+
+
+```{r}
+library(mice)   
+
+# Perform multiple imputation (5 imputations by default)
+imputed_data <- mice(subset_data, m = 1, method = "pmm", seed = 123)
+
+```
+
+```{r}
+factor_vars <- c("year", "marital", "educ", "degree", "padeg", "madeg", "sex", 
+                 "race", "reg16", "income", "rincome", "region", "partyid", 
+                 "polviews", "relig", "happy", "class", "satfin", "finalter", "finrela")
+
+subset_data_imputed <- subset_data_imputed %>%
+  mutate(across(all_of(factor_vars), as.factor))
+
+```
+
+```{r}
+write.csv(subset_data_imputed, "/Users/hugovandenbelt/Documents/GitHub/Research Note EUR Recent Advancements/GSS_subset_imputed.csv", row.names = FALSE)
+```
+
+
+
+
 
 
