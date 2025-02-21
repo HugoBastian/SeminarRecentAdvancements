@@ -58,6 +58,8 @@ colSums(is.na(subset_data))
 
 # Handling Missing Data: Maximum Likelihood
 
+I ended up NOT using this method. Instead I just deleted observations with missing values (see beolow).
+
 ## Why Use Maximum Likelihood (ML) for Imputation?
 
 Missing data is a problem when doing multinomial logistic regression. Instead of simply dropping observations with missing values, I use **Maximum Likelihood (ML) imputation** using **Multiple Imputation by Chained Equations (MICE)** for more reliable results.
@@ -100,7 +102,51 @@ write.csv(subset_data_imputed, "/Users/hugovandenbelt/Documents/GitHub/Research 
 ```
 
 
+## Subset deleting missing observations
 
+```{r}
+# Ensure missing values are correctly recognized
+subset_data_clean <- subset_data %>%
+  filter(complete.cases(finalter, age, degree, sex, race, income, class))
+
+# Check how many observations were removed
+cat("Original dataset size:", nrow(subset_data), "\n")
+cat("Cleaned dataset size:", nrow(subset_data_clean), "\n")
+cat("Number of observations removed:", nrow(subset_data) - nrow(subset_data_clean), "\n")
+
+# Display the first few rows of the cleaned dataset
+head(subset_data_clean)
+
+```
+
+
+We must check if not too many observations have gone missing for a particular year
+
+```{r}
+table(subset_data$year)
+table(subset_data_clean$year)
+```
+
+## FINAL dataset
+
+Finally, we need to delete years where there is a transition of power
+
+```{r}
+# Remove observations from years 1977, 1993, and 2021
+subset_final <- subset_data_clean %>%
+  filter(!(year %in% c(1977, 1993, 2021)))
+
+# Check how many observations were removed
+cat("Original dataset size:", nrow(subset_data_clean), "\n")
+cat("Final dataset size after removing years 1977, 1993, 2021:", nrow(subset_final), "\n")
+cat("Number of observations removed:", nrow(subset_data_clean) - nrow(subset_final), "\n")
+
+# Display the first few rows of the cleaned dataset
+head(subset_final)
+
+table(subset_final$year)
+
+```
 
 
 

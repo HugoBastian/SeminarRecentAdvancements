@@ -53,10 +53,23 @@ summarize_polr <- function(model) {
 ## Republican President, any
 
 ```{r}
+# Run the ordered logit regression with the cleaned dataset
 model_finalter_no_triple_pres_rep <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
                         pres_republican:Democrat_any + pres_republican:Republican_any +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(year),
-                        data = subset_data_imputed, Hess = TRUE)
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        data = subset_data_clean, Hess = TRUE)
+
+# Summarize results
+summarize_polr(model_finalter_no_triple_pres_rep)
+
+```
+
+
+```{r}
+model_finalter_no_triple_pres_rep <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
+                        pres_republican:Democrat_any + pres_republican:Republican_any +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        data = subset_data, Hess = TRUE)
 
 summarize_polr(model_finalter_no_triple_pres_rep)
 ```
@@ -118,6 +131,18 @@ summarize_polr(model_finalter)
 
 
 
+```{r}
+model_finalter_triple_pres_rep_strong <- polr(finalter ~ pres_republican + Democrat_strong + Republican_strong +
+                        after_bushjr + 
+                        pres_republican:Democrat_strong + pres_republican:Republican_strong +
+                        after_bushjr:pres_republican + after_bushjr:Democrat_strong + after_bushjr:Republican_strong +
+                        after_bushjr:pres_republican:Democrat_strong + after_bushjr:pres_republican:Republican_strong +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(year),
+                        data = subset_data_imputed, Hess = TRUE)
+
+summarize_polr(model_finalter_triple_pres_rep_strong)
+
+```
 
 
 
