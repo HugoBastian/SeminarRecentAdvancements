@@ -1,0 +1,203 @@
+---
+title: "Creating Variables"
+author: "Hugo van den Belt"
+date: "2025-02-19"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+
+
+# Creating Variables
+
+## Load Libraries
+```{r}
+library(haven)
+library(dplyr)
+```
+
+## Partisan Identifiers
+
+Here I create dummies for identifying with a political party, based on the variable `partyid`.
+This variable has 8 levels relating to how strongly someone identifies with a party. 
+I make one variable where everyone who agrees slightly with either party (and is not independent) is labeled 
+as that party, and one where only people who agree strongly are identified as that party.
+
+The levels are: 
+0. strong democrat
+1. not very strong democrat
+2. independent, close to democrat
+3. independent (neither, no response)
+4. independent, close to republican
+5. not very strong republican
+6. strong republican
+7. other party
+
+
+### Identifiers for any degree of identification
+
+To create a variable where **any degree of party identification** is grouped under a party label, I define:  
+
+- `Democrat_any = 1` if `partyid` is **0, 1, or 2** (Strong Democrat, Not Very Strong Democrat, Independent Close to Democrat).  
+- `Republican_any = 1` if `partyid` is **4, 5, or 6** (Independent Close to Republican, Not Very Strong Republican, Strong Republican).  
+- All others (pure independents, third-party voters) are coded as `0`.  
+
+
+```{r}
+subset_data <- subset_data %>%
+  mutate(
+    Democrat_any = ifelse(partyid %in% c(0, 1, 2), 1, 0),
+    Republican_any = ifelse(partyid %in% c(4, 5, 6), 1, 0)
+  )
+```
+
+
+### Identifiers for strong identification
+
+To create a variable where **STRONG degree of party identification**:
+
+```{r}
+subset_data <- subset_data %>%
+  mutate(
+    Democrat_strong = ifelse(partyid == 0, 1, 0),
+    Republican_strong = ifelse(partyid == 6, 1, 0)
+  )
+```
+
+
+```{r}
+table(subset_data$partyid)
+
+table(subset_data$Democrat_any)
+table(subset_data$Republican_any)
+
+table(subset_data$Democrat_strong)
+table(subset_data$Republican_strong)
+```
+
+
+
+
+
+## Variable Identifying the president's party
+
+These are the years in the dataset
+
+```{r}
+unique(subset_data$year)
+```
+
+From the [White House Website], (https://www.whitehousehistory.org/the-presidents-timeline) we can see who was president in what year, leading to this table:
+
+### **Party Affiliation of U.S. Presidents (1972–2022)**  
+
+| Year  | President   | Party  |
+|-------|------------|--------|
+| 1972  | Nixon      | R      |
+| 1973  | Nixon      | R      |
+| 1974  | Ford       | R      |
+| 1975  | Ford       | R      |
+| 1976  | Ford       | R      |
+| 1977  | Carter     | D      |
+| 1978  | Carter     | D      |
+| 1980  | Carter     | D      |
+| 1982  | Reagan     | R      |
+| 1983  | Reagan     | R      |
+| 1984  | Reagan     | R      |
+| 1985  | Reagan     | R      |
+| 1986  | Reagan     | R      |
+| 1987  | Reagan     | R      |
+| 1988  | Reagan     | R      |
+| 1989  | Bush Sr.   | R      |
+| 1990  | Bush Sr.   | R      |
+| 1991  | Bush Sr.   | R      |
+| 1993  | Clinton    | D      |
+| 1994  | Clinton    | D      |
+| 1996  | Clinton    | D      |
+| 1998  | Clinton    | D      |
+| 2000  | Clinton    | D      |
+| 2002  | Bush Jr.   | R      |
+| 2004  | Bush Jr.   | R      |
+| 2006  | Bush Jr.   | R      |
+| 2008  | Bush Jr.   | R      |
+| 2010  | Obama      | D      |
+| 2012  | Obama      | D      |
+| 2014  | Obama      | D      |
+| 2016  | Obama      | D      |
+| 2018  | Trump      | R      |
+| 2021  | Biden      | D      |
+| 2022  | Biden      | D      |
+
+Now we can create a variable that is 1 when the president is Republican, and 0 if not (i.e., Democrat)
+
+```{r}
+# president's party dummy
+subset_data <- subset_data %>%
+  mutate(
+    pres_republican = case_when(
+      year %in% c(1972, 1973, 1974, 1975, 1976, 1982, 1983, 1984, 1985, 1986, 
+                  1987, 1988, 1989, 1990, 1991, 2002, 2004, 2006, 2008, 2018) ~ 1,
+      TRUE ~ 0
+    )
+  )
+
+# Counts
+table(subset_data$pres_republican)
+```
+
+```{r}
+# Create a dummy for when the president is a Democrat (1 = Democrat, 0 = Republican)
+subset_data <- subset_data %>%
+  mutate(
+    pres_democrat = case_when(
+      year %in% c(1977, 1978, 1980, 1993, 1994, 1996, 1998, 2000, 
+                  2010, 2012, 2014, 2016, 2021, 2022) ~ 1,
+      TRUE ~ 0
+    )
+  )
+
+# Check counts
+table(subset_data$pres_democrat)
+```
+
+
+## Preparing (possible) outcome variables for ordered logistic regression
+```{r}
+library(dplyr)
+library(MASS)
+
+subset_data <- subset_data %>%
+  mutate(finalter = factor(finalter, 
+                           levels = c(2, 3, 1),  # Match numbers
+                           labels = c("worse", "stayed same", "better"), 
+                           ordered = TRUE),
+         satfin = factor(satfin, 
+                         levels = c(3, 2, 1),  
+                         labels = c("not satisfied at all", "more or less satisfied", "pretty well satisfied"), 
+                         ordered = TRUE))
+
+# Check structure
+levels(subset_data$finalter)
+levels(subset_data$satfin)
+
+str(subset_data$finalter)
+str(subset_data$satfin)
+
+```
+
+
+## Increased Polarization Marker
+
+```{r}
+# Ensure 'year' is numeric
+subset_data <- subset_data %>%
+  mutate(year = as.numeric(as.character(year))) %>%  # Convert year from factor to numeric
+  mutate(after_bushjr = if_else(year >= 2001, 1, 0))
+
+# Check counts
+table(subset_data$after_bushjr)
+```
+
+
