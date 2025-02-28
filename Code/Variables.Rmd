@@ -77,10 +77,6 @@ table(subset_data$Democrat_strong)
 table(subset_data$Republican_strong)
 ```
 
-
-
-
-
 ## Variable Identifying the president's party
 
 These are the years in the dataset
@@ -193,7 +189,7 @@ str(subset_data$satfin)
 ```{r}
 # Ensure 'year' is numeric
 subset_data <- subset_data %>%
-  mutate(year = as.numeric(as.character(year))) %>%  # Convert year from factor to numeric
+  mutate(year = as.numeric(as.character(year))) %>% 
   mutate(after_bushjr = if_else(year >= 2001, 1, 0))
 
 # Check counts

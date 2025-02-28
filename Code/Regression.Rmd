@@ -10,6 +10,13 @@ output:
 
 # Regressions
 
+```{r}
+# Packages
+library(MASS)
+library(dplyr)
+```
+
+
 ## Function for formatted regression output
 ```{r}
 summarize_polr <- function(model) {
@@ -56,7 +63,7 @@ summarize_polr <- function(model) {
 ```{r}
 model_RepPres_FullSample <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
                         pres_republican:Democrat_any + pres_republican:Republican_any +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
                         data = subset_final, Hess = TRUE)
 
 summarize_polr(model_RepPres_FullSample)
@@ -66,7 +73,7 @@ summarize_polr(model_RepPres_FullSample)
 ```{r}
 model_DemPres_FullSample <- polr(finalter ~ pres_democrat + Democrat_any + Republican_any +
                         pres_democrat:Democrat_any + pres_democrat:Republican_any +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
                         data = subset_final, Hess = TRUE)
 
 summarize_polr(model_DemPres_FullSample)
@@ -77,7 +84,7 @@ summarize_polr(model_DemPres_FullSample)
 ```{r}
 model_RepPres_FullSample_Strong <- polr(finalter ~ pres_republican + Democrat_strong + Republican_strong +
                         pres_republican:Democrat_strong + pres_republican:Republican_strong +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
                         data = subset_final, Hess = TRUE)
 
 summarize_polr(model_RepPres_FullSample_Strong)
@@ -88,7 +95,7 @@ summarize_polr(model_RepPres_FullSample_Strong)
 ```{r}
 model_DemPres_FullSample_Strong <- polr(finalter ~ pres_democrat + Democrat_strong + Republican_strong +
                         pres_democrat:Democrat_strong + pres_democrat:Republican_strong +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
                         data = subset_final, Hess = TRUE)
 
 summarize_polr(model_DemPres_FullSample_Strong)
@@ -102,7 +109,7 @@ summarize_polr(model_DemPres_FullSample_Strong)
 ```{r}
 model_RepPres_Post2001 <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
                         pres_republican:Democrat_any + pres_republican:Republican_any +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
                         data = subset_final_postbush, Hess = TRUE)
 
 summarize_polr(model_RepPres_Post2001)
@@ -113,7 +120,7 @@ summarize_polr(model_RepPres_Post2001)
 ```{r}
 model_DemPres_Post2001 <- polr(finalter ~ pres_democrat + Democrat_any + Republican_any +
                         pres_democrat:Democrat_any + pres_democrat:Republican_any +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
                         data = subset_final_postbush, Hess = TRUE)
 
 summarize_polr(model_DemPres_Post2001)
@@ -124,7 +131,7 @@ summarize_polr(model_DemPres_Post2001)
 ```{r}
 model_RepPres_Post2001_Strong <- polr(finalter ~ pres_republican + Democrat_strong + Republican_strong +
                         pres_republican:Democrat_strong + pres_republican:Republican_strong +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
                         data = subset_final_postbush, Hess = TRUE)
 
 summarize_polr(model_RepPres_Post2001_Strong)
@@ -135,7 +142,7 @@ summarize_polr(model_RepPres_Post2001_Strong)
 ```{r}
 model_DemPres_Post2001_Strong <- polr(finalter ~ pres_democrat + Democrat_strong + Republican_strong +
                         pres_democrat:Democrat_strong + pres_democrat:Republican_strong +
-                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
                         data = subset_final_postbush, Hess = TRUE)
 
 summarize_polr(model_DemPres_Post2001_Strong)
@@ -143,19 +150,156 @@ summarize_polr(model_DemPres_Post2001_Strong)
 ```
 
 
+## Predicted Probabilites
+
+```{r}
+# This function will get me modal/mean values of covariates from a to-be specified df
+get_representative_values <- function(data) {
+  list(
+    modal_sex = as.character(names(which.max(table(data$sex)))),
+    modal_race = as.character(names(which.max(table(data$race)))),
+    modal_income = as.character(names(which.max(table(data$income)))),
+    modal_class = as.character(names(which.max(table(data$class)))),
+    modal_degree = as.character(names(which.max(table(data$degree)))),
+    mean_age = mean(data$age, na.rm = TRUE)
+  )
+}
+
+# Function to create profiles based on partisan combinations
+create_partisan_profiles <- function(rep_values, partisan_type = "any") {
+  # modal/mean values
+  base_profile <- list(
+    sex = rep_values$modal_sex,
+    race = rep_values$modal_race,
+    income = rep_values$modal_income,
+    class = rep_values$modal_class,
+    degree = rep_values$modal_degree,
+    age = rep_values$mean_age
+  )
+  
+  # Different partisan profiles based on partisan_type
+  if (partisan_type == "any") {
+    profiles <- list(
+      rep_rep = c(base_profile, list(pres_republican = 1, Democrat_any = 0, Republican_any = 1)),
+      rep_dem = c(base_profile, list(pres_republican = 0, Democrat_any = 0, Republican_any = 1)),
+      dem_rep = c(base_profile, list(pres_republican = 1, Democrat_any = 1, Republican_any = 0)),
+      dem_dem = c(base_profile, list(pres_republican = 0, Democrat_any = 1, Republican_any = 0))
+    )
+  } else if (partisan_type == "strong") {
+    profiles <- list(
+      rep_rep = c(base_profile, list(pres_republican = 1, Democrat_strong = 0, Republican_strong = 1)),
+      rep_dem = c(base_profile, list(pres_republican = 0, Democrat_strong = 0, Republican_strong = 1)),
+      dem_rep = c(base_profile, list(pres_republican = 1, Democrat_strong = 1, Republican_strong = 0)),
+      dem_dem = c(base_profile, list(pres_republican = 0, Democrat_strong = 1, Republican_strong = 0))
+    )
+  }
+  
+  # Each profile has to convert to a data frame
+  profiles <- lapply(profiles, function(p) {
+    df <- data.frame(p)
+    # Ensure factors are properly set for prediction
+    for (col in c("sex", "race", "income", "class", "degree")) {
+      if (col %in% names(df)) {
+        df[[col]] <- as.factor(df[[col]])
+      }
+    }
+    return(df)
+  })
+  
+  return(profiles)
+}
+
+# Fredicted probabilities for a given model, and profiles
+calculate_predicted_probs <- function(model, profiles) {
+  # Level names for finalter
+  level_names <- levels(model$model$finalter)
+  
+  # Predicted probabilities for each profile
+  pred_probs <- list()
+  for (name in names(profiles)) {
+    pred_probs[[name]] <- predict(model, newdata = profiles[[name]], type = "probs")
+  }
+  
+  # results table
+  result_table <- data.frame(
+    partisan_pres = c("Republican under Republican President", 
+                      "Republican under Democratic President",
+                      "Democrat under Republican President",
+                      "Democrat under Democratic President")
+  )
+  
+  # Add the probability columns with correct names
+  for (i in 1:length(level_names)) {
+    col_name <- level_names[i]
+    result_table[[col_name]] <- c(pred_probs$rep_rep[i], 
+                                 pred_probs$rep_dem[i], 
+                                 pred_probs$dem_rep[i], 
+                                 pred_probs$dem_dem[i])
+  }
+  
+  # Make into percentages
+  result_table[, -1] <- round(result_table[, -1] * 100, 1)
+  
+  return(result_table)
+}
+
+# Main function (all predicted probabilities for a model)
+get_predicted_probabilities <- function(model, data, partisan_type = "any") {
+  rep_values <- get_representative_values(data)
+  profiles <- create_partisan_profiles(rep_values, partisan_type)
+  prob_table <- calculate_predicted_probs(model, profiles)
+  
+  return(prob_table)
+}
+
+# Function to run and store predicted probabilities for all model combinations
+get_all_predicted_probabilities <- function(subset_final, subset_final_postbush) {
+  results <- list()
+  
+  # Models for full sample with any partisanship
+  model_RepPres_FullSample <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
+                        pres_republican:Democrat_any + pres_republican:Republican_any +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
+                        data = subset_final, Hess = TRUE)
+  
+  results$full_any <- get_predicted_probabilities(model_RepPres_FullSample, subset_final, "any")
+  
+  # Models for full sample with strong partisanship
+  model_RepPres_FullSample_Strong <- polr(finalter ~ pres_republican + Democrat_strong + Republican_strong +
+                        pres_republican:Democrat_strong + pres_republican:Republican_strong +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
+                        data = subset_final, Hess = TRUE)
+  
+  results$full_strong <- get_predicted_probabilities(model_RepPres_FullSample_Strong, subset_final, "strong")
+  
+  # Models for post-2001 sample with any partisanship
+  model_RepPres_Post2001 <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
+                        pres_republican:Democrat_any + pres_republican:Republican_any +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
+                        data = subset_final_postbush, Hess = TRUE)
+  
+  results$post2001_any <- get_predicted_probabilities(model_RepPres_Post2001, subset_final_postbush, "any")
+  
+  # Models for post-2001 sample with strong partisanship
+  model_RepPres_Post2001_Strong <- polr(finalter ~ pres_republican + Democrat_strong + Republican_strong +
+                        pres_republican:Democrat_strong + pres_republican:Republican_strong +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
+                        data = subset_final_postbush, Hess = TRUE)
+  
+  results$post2001_strong <- get_predicted_probabilities(model_RepPres_Post2001_Strong, subset_final_postbush, "strong")
+  
+  return(results)
+}
+
+```
 
 
+### Results
 
+```{r}
+# Run all the calculations and store results
+all_results <- get_all_predicted_probabilities(subset_final, subset_final_postbush)
 
-
-
-
-
-
-
-
-
-
-
-
+print(all_results)
+```
 

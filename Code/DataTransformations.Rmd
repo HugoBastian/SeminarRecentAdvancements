@@ -56,6 +56,8 @@ colSums(is.na(subset_data))
 
 # Handling Missing Data
 
+BEFORE RUNNING THE CHUNKS BELOW, ALL CHUNKS FROM THE VARIABLES MODULE SHOULD BE RUN 
+
 There are some missing observations, but the package I'm using cannot run the logit model with missing observations. 
 
 ## Subset deleting missing observations
@@ -122,51 +124,16 @@ table(subset_final_postbush$year)
 
 ```
 
-
-
-## Maximum Likelihood [ALTERNATIVE UNUSED APPROACH]
-
-I ended up `not` using this method. Instead I just deleted observations with missing values (see beolow).
-
-## Why Use Maximum Likelihood (ML) for Imputation?
-
-Missing data is a problem when doing multinomial logistic regression. Instead of simply dropping observations with missing values, I use **Maximum Likelihood (ML) imputation** using **Multiple Imputation by Chained Equations (MICE)** for more reliable results.
-
-I found most of the explanation on [this site] (https://www.blog.trainindata.com/multiple-imputation-with-chained-equations-mice-what-is-it/?)
-
-### **Advantages of ML Imputation:**
-1. **Preserves Data Relationships**  
-   - Unlike mean or mode imputation ML imputation considers the relationships between variables when filling in missing values. This avoids distorting the structure of the data.
-
-2. **Handles Both Categorical and Continuous Data**  
-   - MICE allows different imputation methods for different variable types. This makes it more flexible and appropriate for survey datasets.
-
-3. **Reduces Bias Compared to Listwise Deletion**  
-   - removing missing cases could introduce bias. ML imputation minimizes this risk by estimating missing values based on observed data.
-
-By using ML imputation, I ensure that my dataset remains as complete and unbiased as possible while preserving the integrity of the relationships between key variables.
-
+## Save subsets as csv
 
 ```{r}
-library(mice)   
+write.csv(subset_data, file = "/Users/hugovandenbelt/Documents/GitHub/Research Note EUR Recent Advancements/DataSets/subset_GSSdata.csv", row.names = FALSE)
 
-# Perform multiple imputation (5 imputations by default)
-imputed_data <- mice(subset_data, m = 1, method = "pmm", seed = 123)
+write.csv(subset_data_clean, file = "/Users/hugovandenbelt/Documents/GitHub/Research Note EUR Recent Advancements/DataSets/subset_GSSdata_clean.csv", row.names = FALSE)
 
+write.csv(subset_final, file = "/Users/hugovandenbelt/Documents/GitHub/Research Note EUR Recent Advancements/DataSets/subset_final.csv", row.names = FALSE)
+
+write.csv(subset_final_postbush, file = "/Users/hugovandenbelt/Documents/GitHub/Research Note EUR Recent Advancements/DataSets/subset_final_postbush.csv", row.names = FALSE)
 ```
-
-```{r}
-factor_vars <- c("year", "marital", "educ", "degree", "padeg", "madeg", "sex", 
-                 "race", "reg16", "income", "rincome", "region", "partyid", 
-                 "polviews", "relig", "happy", "class", "satfin", "finalter", "finrela")
-
-subset_data_imputed <- subset_data_imputed %>%
-  mutate(across(all_of(factor_vars), as.factor))
-
-```
-
-
-
-
 
 

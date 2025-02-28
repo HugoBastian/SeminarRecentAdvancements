@@ -1,0 +1,143 @@
+---
+title: "Robustness of Regressions"
+author: "Hugo van den Belt"
+date: "2025-02-19"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+# Robustness of Regressions
+
+In this file, I run extra regressions to check the robustness of findings.
+
+```{r}
+library(MASS)
+
+summarize_polr <- function(model) {
+  # Extract coefficients, standard errors, and t-values
+  coefs <- coef(summary(model))
+  
+  # p-values two-tailed
+  p_values <- (1 - pnorm(abs(coefs[, "t value"]))) * 2  
+  
+  # Function to add significance stars
+  add_stars <- function(p) {
+    if (p < 0.001) return("***")
+    else if (p < 0.01) return("**")
+    else if (p < 0.05) return("*")
+    else if (p < 0.1) return(".")
+    else return("")
+  }
+  
+  # Apply the stars
+  stars <- sapply(p_values, add_stars)
+  
+  # Round to 5 decimals 
+  results_table <- cbind(
+    round(coefs, 5),
+    "p-value" = round(p_values, 5), 
+    "Significance" = stars 
+  )
+  
+  print(results_table, digits = 5)
+  
+  # Exponentiated coefficients 
+  exp_coefs <- round(exp(coef(model)), 5)
+  
+  cat("\n**Exponentiated Coefficients (Odds Ratios):**\n")
+  print(exp_coefs)
+}
+
+```
+
+
+## Regressions with omitted years (1977, 1993, 2021)
+
+### Republican President | Any Partisanship
+```{r}
+model_RepPres_FullSample <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
+                        pres_republican:Democrat_any + pres_republican:Republican_any +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
+                        data = subset_data_clean, Hess = TRUE)
+
+summarize_polr(model_RepPres_FullSample)
+```
+
+
+### Republican President | Strong Partisanship
+```{r}
+model_RepPres_FullSample_Strong <- polr(finalter ~ pres_republican + Democrat_strong + Republican_strong +
+                        pres_republican:Democrat_strong + pres_republican:Republican_strong +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree),
+                        data = subset_data_clean, Hess = TRUE)
+
+summarize_polr(model_RepPres_FullSample_Strong)
+
+```
+
+
+
+## Regressions with time covariate
+
+### Republican President | Any Partisanship
+```{r}
+model_RepPres_FullSample <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
+                        pres_republican:Democrat_any + pres_republican:Republican_any +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        data = subset_final, Hess = TRUE)
+
+summarize_polr(model_RepPres_FullSample)
+```
+
+
+
+### Republican President | Strong Partisanship
+```{r}
+model_RepPres_FullSample_Strong <- polr(finalter ~ pres_republican + Democrat_strong + Republican_strong +
+                        pres_republican:Democrat_strong + pres_republican:Republican_strong +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        data = subset_final, Hess = TRUE)
+
+summarize_polr(model_RepPres_FullSample_Strong)
+
+```
+
+### Republican President | Any Partisanship | Post-Bush
+```{r}
+model_RepPres_Post2001 <- polr(finalter ~ pres_republican + Democrat_any + Republican_any +
+                        pres_republican:Democrat_any + pres_republican:Republican_any +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        data = subset_final_postbush, Hess = TRUE)
+
+summarize_polr(model_RepPres_Post2001)
+
+```
+
+
+### Republican President | Strong Partisanship | Post-Bush
+```{r}
+model_RepPres_Post2001_Strong <- polr(finalter ~ pres_republican + Democrat_strong + Republican_strong +
+                        pres_republican:Democrat_strong + pres_republican:Republican_strong +
+                        age + factor(sex) + factor(race) + factor(income) + factor(class) + factor(degree) + factor(year),
+                        data = subset_final_postbush, Hess = TRUE)
+
+summarize_polr(model_RepPres_Post2001_Strong)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
