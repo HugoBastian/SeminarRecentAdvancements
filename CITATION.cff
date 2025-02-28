@@ -1,0 +1,20 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Code for "The Partisan Economy: How Political Affiliation
+  Shapes Perceptions of Financial Well-Being in the United
+  States"
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Hugo Bastiaan
+    family-names: Belt
+    name-particle: van den
+    email: Hugo.vdb.1505@gmail.com
+repository-code: 'https://github.com/HugoBastian/SeminarRecentAdvancements'
+version: 1.0.0
+date-released: '2025-02-28'
